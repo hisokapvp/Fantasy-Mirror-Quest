@@ -239,8 +239,8 @@
             border-color: #b7e3ff;
         }
         
-        .mirror[data-angle="0"] { transform: rotate(-45deg); } 
-        .mirror[data-angle="1"] { transform: rotate(45deg); }
+        .mirror[data-angle="0"] { transform: rotate(45deg); } 
+        .mirror[data-angle="1"] { transform: rotate(-45deg); }
 
         .wall {
             width: 80%; height: 80%;
@@ -869,6 +869,7 @@
     
     function setStartDir(dir) {
         startPos.dir = dir;
+        updateStartIconRotationForDir(dir);
         if (!beamActive) beamActive = true;
         traceBeam();
     }
@@ -942,7 +943,7 @@
                 else if (cellData.type === 'END') div.innerHTML = '<div class="end">💎</div>';
                 else if (cellData.type === 'WALL') div.innerHTML = '<div class="wall"></div>';
                 else if (cellData.type === 'CHEST') {
-                    div.innerHTML = `<div class="chest" data-r="${r}" data-c="${c}">💰</div>`;
+                    div.innerHTML = `<div class="chest" data-r="${r}" data-c="${c}">📦</div>`;
                 }
                 else if (cellData.type === 'MIRROR') {
                     const m = document.createElement('div');
