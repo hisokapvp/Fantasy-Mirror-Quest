@@ -203,29 +203,44 @@
 
         .mirror {
             width: 70%; height: 70%;
-            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
-            border: 1px solid #7f8c8d;
-            box-shadow: 0 0 5px rgba(0,0,0,0.5);
+            background: linear-gradient(135deg, rgba(18, 25, 38, 0.95) 0%, rgba(65, 90, 125, 0.95) 45%, rgba(150, 210, 255, 0.8) 55%, rgba(34, 52, 74, 0.95) 100%);
+            border: 1px solid #8aa6c2;
+            box-shadow: 0 0 6px rgba(0,0,0,0.6), inset 0 0 12px rgba(120, 190, 255, 0.2);
             border-radius: 4px;
             cursor: pointer;
             transition: transform 0.2s ease-out;
             z-index: 2;
             position: relative;
+            overflow: hidden;
         }
         /* Visual Indicator for Mirror Angle */
         .mirror::after {
             content: '';
             position: absolute;
-            width: 100%;
-            height: 4px;
-            background: #00d2ff;
-            box-shadow: 0 0 8px #00d2ff;
-            top: 50%; left: 0;
-            border-radius: 2px;
+            width: 140%;
+            height: 6px;
+            background: linear-gradient(90deg, rgba(0, 255, 255, 0), rgba(0, 220, 255, 0.9), rgba(0, 255, 255, 0));
+            box-shadow: 0 0 10px rgba(0, 210, 255, 0.9);
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            border-radius: 6px;
+        }
+
+        .mirror::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0) 55%);
+            opacity: 0.7;
         }
         
-        .mirror[data-angle="0"] { transform: rotate(-45deg); } 
-        .mirror[data-angle="1"] { transform: rotate(45deg); }
+        .mirror.reflecting {
+            box-shadow: 0 0 15px rgba(0, 210, 255, 0.8), inset 0 0 15px rgba(0, 210, 255, 0.3);
+            border-color: #b7e3ff;
+        }
+        
+        .mirror[data-angle="0"] { transform: rotate(45deg); } 
+        .mirror[data-angle="1"] { transform: rotate(-45deg); }
 
         .wall {
             width: 80%; height: 80%;
@@ -249,10 +264,9 @@
             filter: drop-shadow(0 0 5px #0f0); 
             z-index: 3; 
             cursor: pointer; 
-            animation: spin 4s linear infinite; /* Always spinning */
-            pointer-events: none; /* Let clicks pass to container */
+            transition: transform 0.25s ease-out;
+            pointer-events: auto;
         }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
 
         /* Hover Arrows */
         .start-arrows {
@@ -372,6 +386,7 @@
         <div class="hud-panel">
             <div class="hud-item"><span id="lbl-score">Score:</span> <b class="score-val" id="score-val">1000</b></div>
             <div class="hud-item"><span id="lbl-moves">Moves:</span> <b id="moves-val">0</b></div>
+            <div class="hud-item"><span id="lbl-mirrors">Mirrors:</span> <b id="mirrors-val">0</b></div>
             <div class="hud-item">
                 <button class="hint-btn-game" onclick="toggleHint()" id="btn-hint" style="padding: 5px 15px; min-width: auto; font-size: 0.8em;">SHOW PATH</button>
             </div>
@@ -397,6 +412,7 @@
             hard: "Ranger",
             score: "Energy:",
             moves: "Moves:",
+            mirrors: "Mirrors:",
             hint: "SHOW PATH",
             exit: "EXIT",
             menu: "MAIN MENU",
@@ -418,6 +434,7 @@
             hard: "Следопыт",
             score: "Энергия:",
             moves: "Ходы:",
+            mirrors: "Зеркала:",
             hint: "ПОКАЗАТЬ ПУТЬ",
             exit: "ВЫХОД",
             menu: "ГЛАВНОЕ МЕНЮ",
@@ -447,9 +464,9 @@
     const RANK_THRESHOLDS = [0, 5000, 15000, 30000, 50000, 80000, 120000, 170000, 250000, 500000];
 
     const LEVELS = [
-        { size: 8,  pathLen: 6,  startScore: 2000, moveCost: 40, monsterCount: 1, chestCount: 1, xpRewardFactor: 0.5 },
-        { size: 10, pathLen: 10, startScore: 4000, moveCost: 80, monsterCount: 2, chestCount: 2, xpRewardFactor: 0.5 },
-        { size: 12, pathLen: 16, startScore: 8000, moveCost: 150, monsterCount: 3, chestCount: 3, xpRewardFactor: 0.5 }
+        { size: 8,  pathLen: 6,  startScore: 2000, moveCost: 40, monsterCount: 1, chestCount: 1, xpRewardFactor: 0.5, placeableMirrors: 2 },
+        { size: 10, pathLen: 10, startScore: 4000, moveCost: 80, monsterCount: 2, chestCount: 2, xpRewardFactor: 0.5, placeableMirrors: 4 },
+        { size: 12, pathLen: 16, startScore: 8000, moveCost: 150, monsterCount: 3, chestCount: 3, xpRewardFactor: 0.5, placeableMirrors: 6 }
     ];
 
     const DIRS = { 'UP': {dx:0, dy:-1}, 'DOWN': {dx:0, dy:1}, 'LEFT': {dx:-1, dy:0}, 'RIGHT': {dx:1, dy:0} };
@@ -474,6 +491,8 @@
     let monsterInterval = null;
     let beamAnimFrame = null;
     let beamPulse = 0;
+    let startRotation = 0;
+    let remainingPlaceableMirrors = 0;
 
     // --- UI FUNCTIONS ---
     function setLang(lang) {
@@ -490,6 +509,7 @@
         document.getElementById('btn-hard').textContent = TEXT[lang].hard;
         document.getElementById('lbl-score').textContent = TEXT[lang].score;
         document.getElementById('lbl-moves').textContent = TEXT[lang].moves;
+        document.getElementById('lbl-mirrors').textContent = TEXT[lang].mirrors;
         document.getElementById('btn-hint').textContent = TEXT[lang].hint;
         document.getElementById('btn-exit').textContent = TEXT[lang].exit;
         document.getElementById('btn-menu').textContent = TEXT[lang].menu;
@@ -537,6 +557,8 @@
         isWin = false;
         showHintOverlay = false;
         beamActive = false; 
+        startRotation = 0;
+        remainingPlaceableMirrors = cfg.placeableMirrors;
         
         document.getElementById('main-menu').style.display = 'none';
         document.getElementById('game-ui').style.display = 'flex';
@@ -579,6 +601,7 @@
     function updateHUD() {
         document.getElementById('score-val').textContent = Math.floor(score);
         document.getElementById('moves-val').textContent = moves;
+        document.getElementById('mirrors-val').textContent = remainingPlaceableMirrors;
     }
 
     function finishLevel() {
@@ -735,24 +758,57 @@
             el.style.left = (mx * (CELL_SIZE+GAP) + 10) + 'px';
             el.style.top = (my * (CELL_SIZE+GAP) + 10) + 'px';
             layer.appendChild(el);
-            monsters.push({x: mx, y: my, el: el, dead: false});
+            const patrolRoute = buildPatrolRoute(mx, my);
+            monsters.push({x: mx, y: my, el: el, dead: false, route: patrolRoute, routeIndex: 0});
         }
+    }
+
+    function buildPatrolRoute(startX, startY) {
+        const directions = [
+            {x: 0, y: -1},
+            {x: 0, y: 1},
+            {x: -1, y: 0},
+            {x: 1, y: 0}
+        ];
+        directions.sort(() => Math.random() - 0.5);
+
+        for (const dir of directions) {
+            const length = 2 + Math.floor(Math.random() * 4);
+            const forward = [{x: startX, y: startY}];
+            let valid = true;
+            for (let step = 1; step <= length; step++) {
+                const nx = startX + dir.x * step;
+                const ny = startY + dir.y * step;
+                if (nx < 0 || nx >= boardSize || ny < 0 || ny >= boardSize) {
+                    valid = false;
+                    break;
+                }
+                if (grid[ny][nx].type !== 'EMPTY') {
+                    valid = false;
+                    break;
+                }
+                forward.push({x: nx, y: ny});
+            }
+            if (!valid || forward.length < 2) continue;
+
+            const backward = forward.slice(1, -1).reverse();
+            return forward.concat(backward);
+        }
+
+        return [{x: startX, y: startY}];
     }
 
     function updateMonsters() {
         if (isWin) return;
         monsters.forEach(m => {
             if (m.dead) return;
-            let moves = [{x:0, y:-1}, {x:0, y:1}, {x:-1, y:0}, {x:1, y:0}];
-            let move = moves[Math.floor(Math.random()*moves.length)];
-            let nx = m.x + move.x;
-            let ny = m.y + move.y;
-            if (nx >= 0 && nx < boardSize && ny >= 0 && ny < boardSize) {
-                if (grid[ny][nx].type === 'EMPTY') {
-                    m.x = nx; m.y = ny;
-                    m.el.style.left = (m.x * (CELL_SIZE+GAP) + 10) + 'px';
-                    m.el.style.top = (m.y * (CELL_SIZE+GAP) + 10) + 'px';
-                }
+            if (!m.route || m.route.length === 0) return;
+            m.routeIndex = (m.routeIndex + 1) % m.route.length;
+            const next = m.route[m.routeIndex];
+            if (grid[next.y][next.x].type === 'EMPTY') {
+                m.x = next.x; m.y = next.y;
+                m.el.style.left = (m.x * (CELL_SIZE+GAP) + 10) + 'px';
+                m.el.style.top = (m.y * (CELL_SIZE+GAP) + 10) + 'px';
             }
         });
     }
@@ -813,8 +869,27 @@
     
     function setStartDir(dir) {
         startPos.dir = dir;
+        updateStartIconRotationForDir(dir);
         if (!beamActive) beamActive = true;
         traceBeam();
+    }
+    
+    function updateStartIconRotationForDir(dir) {
+        const dirIndex = DIR_NAMES.indexOf(dir);
+        if (dirIndex >= 0) {
+            startRotation = (dirIndex * 90) % 360;
+            const iconEl = document.querySelector('.start-icon');
+            if (iconEl) {
+                iconEl.style.transform = `rotate(${startRotation}deg)`;
+            }
+        }
+    }
+
+    function rotateStartIcon(iconEl) {
+        startRotation = (startRotation + 90) % 360;
+        if (iconEl) {
+            iconEl.style.transform = `rotate(${startRotation}deg)`;
+        }
     }
 
     function clickCell(r, c) {
@@ -831,6 +906,20 @@
             let dom = document.querySelector(`.mirror[data-r="${r}"][data-c="${c}"]`);
             if (dom) dom.dataset.angle = cell.angle;
         }
+    }
+    
+    function placeMirror(r, c) {
+        if (isWin) return;
+        if (!beamActive) beamActive = true; 
+        if (remainingPlaceableMirrors <= 0) return;
+        const cell = grid[r][c];
+        if (cell.type !== 'EMPTY') return;
+        grid[r][c] = {type: 'MIRROR', angle: 0};
+        remainingPlaceableMirrors--;
+        moves++;
+        score = Math.max(0, score - LEVELS[curLevelIdx].moveCost);
+        updateHUD();
+        renderBoard();
     }
 
     function renderBoard() {
@@ -855,12 +944,17 @@
                             </div>
                         </div>
                     `;
-                    // Removed onclick for rotation, used arrows instead
+                    const iconEl = div.querySelector('.start-icon');
+                    iconEl.style.transform = `rotate(${startRotation}deg)`;
+                    iconEl.addEventListener('click', (event) => {
+                        event.stopPropagation();
+                        rotateStartIcon(iconEl);
+                    });
                 }
                 else if (cellData.type === 'END') div.innerHTML = '<div class="end">💎</div>';
                 else if (cellData.type === 'WALL') div.innerHTML = '<div class="wall"></div>';
                 else if (cellData.type === 'CHEST') {
-                    div.innerHTML = `<div class="chest" data-r="${r}" data-c="${c}">💰</div>`;
+                    div.innerHTML = `<div class="chest" data-r="${r}" data-c="${c}">📦</div>`;
                 }
                 else if (cellData.type === 'MIRROR') {
                     const m = document.createElement('div');
@@ -870,6 +964,9 @@
                     m.dataset.c = c;
                     div.appendChild(m);
                     div.onclick = () => clickCell(r, c);
+                }
+                else if (cellData.type === 'EMPTY') {
+                    div.onclick = () => placeMirror(r, c);
                 }
                 boardEl.appendChild(div);
             }
@@ -882,6 +979,8 @@
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
         if (!beamActive) return;
+
+        document.querySelectorAll('.mirror.reflecting').forEach(el => el.classList.remove('reflecting'));
 
         if (showHintOverlay && solutionPath.length > 0) {
             ctx.strokeStyle = 'rgba(0, 210, 255, 0.3)';
@@ -942,6 +1041,8 @@
             if (cell.type === 'END') { hitEnd = true; break; }
             
             if (cell.type === 'MIRROR') {
+                const mirrorEl = document.querySelector(`.mirror[data-r="${ly}"][data-c="${lx}"]`);
+                if (mirrorEl) mirrorEl.classList.add('reflecting');
                 if (cell.angle === 0) { 
                     if (lDir === 'RIGHT') lDir = 'DOWN';
                     else if (lDir === 'DOWN') lDir = 'RIGHT';
