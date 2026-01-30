@@ -464,7 +464,7 @@
     const RANK_THRESHOLDS = [0, 5000, 15000, 30000, 50000, 80000, 120000, 170000, 250000, 500000];
 
     const LEVELS = [
-        { size: 8,  pathLen: 6,  startScore: 2000, moveCost: 40, monsterCount: 1, chestCount: 1, xpRewardFactor: 0.5, placeableMirrors: { min: 5, max: 7 } },
+        { size: 8,  pathLen: 6,  startScore: 2000, moveCost: 40, monsterCount: 1, chestCount: 1, xpRewardFactor: 0.5, placeableMirrors: 2, generatedMirrors: { min: 5, max: 7 } },
         { size: 10, pathLen: 10, startScore: 4000, moveCost: 80, monsterCount: 2, chestCount: 2, xpRewardFactor: 0.5, placeableMirrors: 4 },
         { size: 12, pathLen: 16, startScore: 8000, moveCost: 150, monsterCount: 3, chestCount: 3, xpRewardFactor: 0.5, placeableMirrors: 6 }
     ];
@@ -611,6 +611,13 @@
         return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 
+    function getGeneratedMirrorTarget(range) {
+        if (!range) return null;
+        const min = Math.min(range.min, range.max);
+        const max = Math.max(range.min, range.max);
+        return { min, max };
+    }
+
     function oppositeDir(dir) {
         if (dir === 'UP') return 'DOWN';
         if (dir === 'DOWN') return 'UP';
@@ -643,6 +650,7 @@
             grid = Array(boardSize).fill(null).map(() => Array(boardSize).fill({type: 'EMPTY'}));
             startPos = {x: 0, y: Math.floor(Math.random() * boardSize), dir: 'RIGHT'};
             endPos = {x: boardSize - 1, y: Math.floor(Math.random() * boardSize)};
+            startRotation = getRotationForDir(startPos.dir);
             
             // 1. Generate Main Path (Win Condition)
             let path = generatePath(startPos, endPos, cfg.pathLen);
@@ -662,7 +670,7 @@
                     cx = Math.floor(Math.random() * boardSize);
                     cy = Math.floor(Math.random() * boardSize);
                     attempts++;
-                } while (grid[cy][cx].type !== 'EMPTY' && attempts < 50);
+                } while ((grid[cy][cx].type !== 'EMPTY' || isNearStart(cx, cy)) && attempts < 50);
 
                 if (grid[cy][cx].type === 'EMPTY') {
                     // Try to generate path FROM CHEST to START (Reverse generation guarantees reachability)
@@ -712,8 +720,52 @@
                     }
                 }
             }
+            const mirrorTarget = getGeneratedMirrorTarget(cfg.generatedMirrors);
+            if (mirrorTarget) {
+                const targetCount = Math.floor(Math.random() * (mirrorTarget.max - mirrorTarget.min + 1)) + mirrorTarget.min;
+                let mirrorCount = countMirrors();
+                if (mirrorCount > targetCount) {
+                    continue;
+                }
+                if (mirrorCount < targetCount) {
+                    const maxAttempts = boardSize * boardSize * 2;
+                    let attempts = 0;
+                    while (mirrorCount < targetCount && attempts < maxAttempts) {
+                        const rx = Math.floor(Math.random() * boardSize);
+                        const ry = Math.floor(Math.random() * boardSize);
+                        if (grid[ry][rx].type === 'EMPTY' && !isOnSolutionPath(rx, ry)) {
+                            grid[ry][rx] = {type: 'MIRROR', angle: Math.floor(Math.random() * 2)};
+                            mirrorCount++;
+                        }
+                        attempts++;
+                    }
+                    if (mirrorCount < targetCount) {
+                        continue;
+                    }
+                }
+            }
             success = true;
         }
+    }
+
+    function isNearStart(x, y) {
+        const dx = Math.abs(x - startPos.x);
+        const dy = Math.abs(y - startPos.y);
+        return Math.max(dx, dy) <= 1;
+    }
+
+    function countMirrors() {
+        let total = 0;
+        for (let r = 0; r < boardSize; r++) {
+            for (let c = 0; c < boardSize; c++) {
+                if (grid[r][c].type === 'MIRROR') total++;
+            }
+        }
+        return total;
+    }
+
+    function isOnSolutionPath(x, y) {
+        return solutionPath.some(p => p.x === x && p.y === y);
     }
 
     function generatePath(start, end, minLen) {
@@ -881,17 +933,42 @@
         beamAnimFrame = requestAnimationFrame(animateBeam);
     }
     
-    function setStartDir(dir) {
-        startPos.dir = dir;
-        if (!beamActive) beamActive = true;
-        traceBeam();
+    function getRotationForDir(dir) {
+        if (dir === 'UP') return 270;
+        if (dir === 'RIGHT') return 0;
+        if (dir === 'DOWN') return 90;
+        return 180;
     }
-    
-    function rotateStartIcon(iconEl) {
-        startRotation = (startRotation + 90) % 360;
+
+    function applyStartRotation(iconEl) {
         if (iconEl) {
             iconEl.style.transform = `rotate(${startRotation}deg)`;
         }
+    }
+
+    function setStartDir(dir) {
+        startPos.dir = dir;
+        startRotation = getRotationForDir(dir);
+        const iconEl = document.querySelector('.start-icon');
+        applyStartRotation(iconEl);
+        if (!beamActive) beamActive = true;
+        traceBeam();
+    }
+
+    function rotateStartIcon() {
+        const currentIndex = DIR_NAMES.indexOf(startPos.dir);
+        const nextDir = DIR_NAMES[(currentIndex + 1) % DIR_NAMES.length];
+        setStartDir(nextDir);
+    }
+
+    function getBeamOrigin() {
+        const baseX = startPos.x * (CELL_SIZE + GAP) + CELL_SIZE / 2;
+        const baseY = startPos.y * (CELL_SIZE + GAP) + CELL_SIZE / 2;
+        const offset = CELL_SIZE * 0.25;
+        if (startPos.dir === 'UP') return { x: baseX, y: baseY - offset };
+        if (startPos.dir === 'DOWN') return { x: baseX, y: baseY + offset };
+        if (startPos.dir === 'LEFT') return { x: baseX - offset, y: baseY };
+        return { x: baseX + offset, y: baseY };
     }
 
     function clickCell(r, c) {
@@ -947,16 +1024,17 @@
                         </div>
                     `;
                     const iconEl = div.querySelector('.start-icon');
-                    iconEl.style.transform = `rotate(${startRotation}deg)`;
+                    applyStartRotation(iconEl);
                     iconEl.addEventListener('click', (event) => {
                         event.stopPropagation();
-                        rotateStartIcon(iconEl);
+                        rotateStartIcon();
                     });
                 }
                 else if (cellData.type === 'END') div.innerHTML = '<div class="end">💎</div>';
                 else if (cellData.type === 'WALL') div.innerHTML = '<div class="wall"></div>';
                 else if (cellData.type === 'CHEST') {
-                    div.innerHTML = `<div class="chest" data-r="${r}" data-c="${c}">🧰</div>`;
+                    const openClass = cellData.opened ? ' open' : '';
+                    div.innerHTML = `<div class="chest${openClass}" data-r="${r}" data-c="${c}">🧰</div>`;
                 }
                 else if (cellData.type === 'MIRROR') {
                     const m = document.createElement('div');
@@ -1010,9 +1088,8 @@
         ctx.lineCap = 'round';
         ctx.beginPath();
         
-        let cx = startPos.x * (CELL_SIZE + GAP) + CELL_SIZE/2;
-        let cy = startPos.y * (CELL_SIZE + GAP) + CELL_SIZE/2;
-        ctx.moveTo(cx, cy);
+        const origin = getBeamOrigin();
+        ctx.moveTo(origin.x, origin.y);
         
         let lx = startPos.x, ly = startPos.y, lDir = startPos.dir;
         let steps = 0, hitEnd = false;
