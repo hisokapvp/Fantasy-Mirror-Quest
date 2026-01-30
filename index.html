@@ -874,17 +874,6 @@
         traceBeam();
     }
     
-    function updateStartIconRotationForDir(dir) {
-        const dirIndex = DIR_NAMES.indexOf(dir);
-        if (dirIndex >= 0) {
-            startRotation = (dirIndex * 90) % 360;
-            const iconEl = document.querySelector('.start-icon');
-            if (iconEl) {
-                iconEl.style.transform = `rotate(${startRotation}deg)`;
-            }
-        }
-    }
-
     function rotateStartIcon(iconEl) {
         startRotation = (startRotation + 90) % 360;
         if (iconEl) {
