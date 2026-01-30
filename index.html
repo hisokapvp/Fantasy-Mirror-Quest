@@ -342,14 +342,32 @@
             pointer-events: auto;
             transform: rotate(var(--start-rotate, 0deg));
             transform-origin: center;
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .start-icon .icon-stack {
+            position: relative;
+            display: inline-block;
+            width: 1em;
+            height: 1em;
         }
 
         .start-icon .icon-core {
-            display: inline-block;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
             transform-origin: center;
         }
 
-        .start-icon.beam-active .icon-core {
+        .start-icon .icon-core.icon-rotated {
+            transform: translate(-50%, -50%) rotate(90deg);
+        }
+
+        .start-icon.beam-active .icon-stack {
             animation: startJitter 0.2s infinite ease-in-out;
         }
 
@@ -567,8 +585,8 @@
 
     const LEVELS = [
         { size: 8,  pathLen: 6,  startScore: 2000, moveCost: 40, monsterCount: 1, chestCount: 1, xpRewardFactor: 0.5, placeableMirrors: 2, generatedMirrors: { min: 5, max: 7 } },
-        { size: 10, pathLen: 10, startScore: 4000, moveCost: 80, monsterCount: 2, chestCount: 2, xpRewardFactor: 0.5, placeableMirrors: 4 },
-        { size: 12, pathLen: 16, startScore: 8000, moveCost: 150, monsterCount: 3, chestCount: 3, xpRewardFactor: 0.5, placeableMirrors: 6 }
+        { size: 10, pathLen: 10, startScore: 4000, moveCost: 80, monsterCount: 2, chestCount: 2, xpRewardFactor: 0.5, placeableMirrors: 4, generatedMirrors: { min: 8, max: 11 } },
+        { size: 12, pathLen: 16, startScore: 8000, moveCost: 150, monsterCount: 3, chestCount: 3, xpRewardFactor: 0.5, placeableMirrors: 6, generatedMirrors: { min: 12, max: 15 } }
     ];
 
     const DIRS = { 'UP': {dx:0, dy:-1}, 'DOWN': {dx:0, dy:1}, 'LEFT': {dx:-1, dy:0}, 'RIGHT': {dx:1, dy:0} };
@@ -1076,26 +1094,9 @@
     }
 
     function getBeamOrigin() {
-        const startIcon = document.querySelector('.start-icon');
-        const boardEl = document.getElementById('board-container');
-        if (startIcon && boardEl) {
-            const iconRect = startIcon.getBoundingClientRect();
-            const boardRect = boardEl.getBoundingClientRect();
-            const centerX = iconRect.left + iconRect.width / 2;
-            const centerY = iconRect.top + iconRect.height / 2;
-            const offset = iconRect.height / 2;
-            const rad = (startRotation * Math.PI) / 180;
-            const dx = Math.cos(rad - Math.PI / 2) * offset;
-            const dy = Math.sin(rad - Math.PI / 2) * offset;
-            return {
-                x: centerX + dx - boardRect.left,
-                y: centerY + dy - boardRect.top
-            };
-        }
-
         const baseX = startPos.x * (CELL_SIZE + GAP) + CELL_SIZE / 2;
-        const topY = startPos.y * (CELL_SIZE + GAP) + CELL_SIZE * 0.15;
-        return { x: baseX, y: topY };
+        const baseY = startPos.y * (CELL_SIZE + GAP) + CELL_SIZE / 2;
+        return { x: baseX, y: baseY };
     }
 
     function clickCell(r, c) {
@@ -1141,7 +1142,12 @@
                 if (cellData.type === 'START') {
                     div.innerHTML = `
                         <div class="start-container">
-                            <div class="start-icon"><span class="icon-core">⚡</span></div>
+                            <div class="start-icon">
+                                <span class="icon-stack">
+                                    <span class="icon-core icon-base">⚡</span>
+                                    <span class="icon-core icon-rotated">⚡</span>
+                                </span>
+                            </div>
                             <div class="start-arrows">
                                 <div class="arrow-btn arr-up" onclick="event.stopPropagation(); setStartDir('UP')">▲</div>
                                 <div class="arrow-btn arr-down" onclick="event.stopPropagation(); setStartDir('DOWN')">▼</div>
