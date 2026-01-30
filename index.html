@@ -464,7 +464,7 @@
     const RANK_THRESHOLDS = [0, 5000, 15000, 30000, 50000, 80000, 120000, 170000, 250000, 500000];
 
     const LEVELS = [
-        { size: 8,  pathLen: 6,  startScore: 2000, moveCost: 40, monsterCount: 1, chestCount: 1, xpRewardFactor: 0.5, placeableMirrors: 2 },
+        { size: 8,  pathLen: 6,  startScore: 2000, moveCost: 40, monsterCount: 1, chestCount: 1, xpRewardFactor: 0.5, placeableMirrors: { min: 5, max: 7 } },
         { size: 10, pathLen: 10, startScore: 4000, moveCost: 80, monsterCount: 2, chestCount: 2, xpRewardFactor: 0.5, placeableMirrors: 4 },
         { size: 12, pathLen: 16, startScore: 8000, moveCost: 150, monsterCount: 3, chestCount: 3, xpRewardFactor: 0.5, placeableMirrors: 6 }
     ];
@@ -558,7 +558,7 @@
         showHintOverlay = false;
         beamActive = false; 
         startRotation = 0;
-        remainingPlaceableMirrors = cfg.placeableMirrors;
+        remainingPlaceableMirrors = resolvePlaceableMirrors(cfg.placeableMirrors);
         
         document.getElementById('main-menu').style.display = 'none';
         document.getElementById('game-ui').style.display = 'flex';
@@ -602,6 +602,20 @@
         document.getElementById('score-val').textContent = Math.floor(score);
         document.getElementById('moves-val').textContent = moves;
         document.getElementById('mirrors-val').textContent = remainingPlaceableMirrors;
+    }
+
+    function resolvePlaceableMirrors(value) {
+        if (typeof value === 'number') return value;
+        const min = Math.min(value.min, value.max);
+        const max = Math.max(value.min, value.max);
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function oppositeDir(dir) {
+        if (dir === 'UP') return 'DOWN';
+        if (dir === 'DOWN') return 'UP';
+        if (dir === 'LEFT') return 'RIGHT';
+        return 'LEFT';
     }
 
     function finishLevel() {
@@ -942,7 +956,7 @@
                 else if (cellData.type === 'END') div.innerHTML = '<div class="end">💎</div>';
                 else if (cellData.type === 'WALL') div.innerHTML = '<div class="wall"></div>';
                 else if (cellData.type === 'CHEST') {
-                    div.innerHTML = `<div class="chest" data-r="${r}" data-c="${c}">💰</div>`;
+                    div.innerHTML = `<div class="chest" data-r="${r}" data-c="${c}">🧰</div>`;
                 }
                 else if (cellData.type === 'MIRROR') {
                     const m = document.createElement('div');
@@ -1042,6 +1056,7 @@
                     else if (lDir === 'LEFT') lDir = 'DOWN';
                     else if (lDir === 'DOWN') lDir = 'LEFT';
                 }
+                lDir = oppositeDir(lDir);
             }
             steps++;
         }
