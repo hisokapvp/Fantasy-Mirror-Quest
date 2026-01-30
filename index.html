@@ -241,6 +241,8 @@
         
         .mirror[data-angle="0"] { transform: rotate(-45deg); } 
         .mirror[data-angle="1"] { transform: rotate(45deg); }
+        .mirror[data-angle="2"] { transform: rotate(135deg); }
+        .mirror[data-angle="3"] { transform: rotate(225deg); }
 
         .wall {
             width: 80%; height: 80%;
@@ -266,6 +268,26 @@
             cursor: pointer; 
             transition: transform 0.25s ease-out;
             pointer-events: auto;
+            transform: rotate(var(--start-rotate, 0deg));
+            transform-origin: center;
+        }
+
+        .start-icon .icon-core {
+            display: inline-block;
+            transform-origin: center;
+        }
+
+        .start-icon.beam-active .icon-core {
+            animation: startJitter 0.2s infinite ease-in-out;
+        }
+
+        @keyframes startJitter {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            20% { transform: translate(-1px, 1px) rotate(-3deg); }
+            40% { transform: translate(1px, -1px) rotate(3deg); }
+            60% { transform: translate(-1px, -1px) rotate(-2deg); }
+            80% { transform: translate(1px, 1px) rotate(2deg); }
+            100% { transform: translate(0, 0) rotate(0deg); }
         }
 
         /* Hover Arrows */
@@ -655,10 +677,23 @@
             // 1. Generate Main Path (Win Condition)
             let path = generatePath(startPos, endPos, cfg.pathLen);
             if (!path) continue;
+            if (countMirrors() === 0) continue;
             solutionPath = path; 
 
             grid[startPos.y][startPos.x] = {type: 'START'};
             grid[endPos.y][endPos.x] = {type: 'END'};
+
+            if (startPos.y === endPos.y) {
+                const wallCandidates = [];
+                for (let x = startPos.x + 1; x < endPos.x; x++) {
+                    if (!path.some(p => p.x === x && p.y === startPos.y)) {
+                        wallCandidates.push(x);
+                    }
+                }
+                if (wallCandidates.length === 0) continue;
+                const wallX = wallCandidates[Math.floor(Math.random() * wallCandidates.length)];
+                grid[startPos.y][wallX] = {type: 'WALL'};
+            }
 
             // 2. Generate Chest Paths (Secondary Objectives)
             chests = [];
@@ -713,10 +748,10 @@
                         if (!onPath) {
                             let rand = Math.random();
                             if (rand > 0.75) grid[r][c] = {type: 'WALL'};
-                            else if (rand > 0.85) grid[r][c] = {type: 'MIRROR', angle: Math.floor(Math.random()*2)};
+                            else if (rand > 0.85) grid[r][c] = {type: 'MIRROR', angle: Math.floor(Math.random()*4)};
                         }
                     } else if (cell.type === 'MIRROR') {
-                        cell.angle = Math.floor(Math.random()*2); 
+                        cell.angle = Math.floor(Math.random()*4); 
                     }
                 }
             }
@@ -734,7 +769,7 @@
                         const rx = Math.floor(Math.random() * boardSize);
                         const ry = Math.floor(Math.random() * boardSize);
                         if (grid[ry][rx].type === 'EMPTY' && !isOnSolutionPath(rx, ry)) {
-                            grid[ry][rx] = {type: 'MIRROR', angle: Math.floor(Math.random() * 2)};
+                            grid[ry][rx] = {type: 'MIRROR', angle: Math.floor(Math.random() * 4)};
                             mirrorCount++;
                         }
                         attempts++;
@@ -942,7 +977,7 @@
 
     function applyStartRotation(iconEl) {
         if (iconEl) {
-            iconEl.style.transform = `rotate(${startRotation}deg)`;
+            iconEl.style.setProperty('--start-rotate', `${startRotation}deg`);
         }
     }
 
@@ -963,12 +998,8 @@
 
     function getBeamOrigin() {
         const baseX = startPos.x * (CELL_SIZE + GAP) + CELL_SIZE / 2;
-        const baseY = startPos.y * (CELL_SIZE + GAP) + CELL_SIZE / 2;
-        const offset = CELL_SIZE * 0.25;
-        if (startPos.dir === 'UP') return { x: baseX, y: baseY - offset };
-        if (startPos.dir === 'DOWN') return { x: baseX, y: baseY + offset };
-        if (startPos.dir === 'LEFT') return { x: baseX - offset, y: baseY };
-        return { x: baseX + offset, y: baseY };
+        const topY = startPos.y * (CELL_SIZE + GAP) + CELL_SIZE * 0.15;
+        return { x: baseX, y: topY };
     }
 
     function clickCell(r, c) {
@@ -978,7 +1009,7 @@
         let cell = grid[r][c];
         
         if (cell.type === 'MIRROR') {
-            cell.angle = (cell.angle + 1) % 2;
+            cell.angle = (cell.angle + 1) % 4;
             moves++;
             score = Math.max(0, score - LEVELS[curLevelIdx].moveCost);
             updateHUD();
@@ -1014,7 +1045,7 @@
                 if (cellData.type === 'START') {
                     div.innerHTML = `
                         <div class="start-container">
-                            <div class="start-icon">⚡</div>
+                            <div class="start-icon"><span class="icon-core">⚡</span></div>
                             <div class="start-arrows">
                                 <div class="arrow-btn arr-up" onclick="event.stopPropagation(); setStartDir('UP')">▲</div>
                                 <div class="arrow-btn arr-down" onclick="event.stopPropagation(); setStartDir('DOWN')">▼</div>
@@ -1058,6 +1089,11 @@
         const ctx = canvas.getContext('2d');
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
+        const startIcon = document.querySelector('.start-icon');
+        if (startIcon) {
+            startIcon.classList.toggle('beam-active', beamActive);
+        }
+
         if (!beamActive) return;
 
         document.querySelectorAll('.mirror.reflecting').forEach(el => el.classList.remove('reflecting'));
@@ -1122,7 +1158,8 @@
             if (cell.type === 'MIRROR') {
                 const mirrorEl = document.querySelector(`.mirror[data-r="${ly}"][data-c="${lx}"]`);
                 if (mirrorEl) mirrorEl.classList.add('reflecting');
-                if (cell.angle === 0) { 
+                const mirrorAngle = cell.angle % 2;
+                if (mirrorAngle === 0) { 
                     if (lDir === 'RIGHT') lDir = 'DOWN';
                     else if (lDir === 'DOWN') lDir = 'RIGHT';
                     else if (lDir === 'LEFT') lDir = 'UP';
