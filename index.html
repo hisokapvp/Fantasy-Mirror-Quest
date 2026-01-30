@@ -43,6 +43,61 @@
             backdrop-filter: blur(5px);
         }
 
+        #main-menu {
+            background: radial-gradient(circle at top, rgba(70, 120, 210, 0.35), transparent 55%),
+                radial-gradient(circle at 20% 80%, rgba(255, 140, 60, 0.25), transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(140, 70, 255, 0.2), transparent 45%),
+                rgba(5, 7, 10, 0.9);
+            overflow: hidden;
+        }
+
+        .menu-backdrop {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .menu-orb {
+            position: absolute;
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(77, 179, 255, 0.8), rgba(77, 179, 255, 0));
+            filter: blur(2px);
+            animation: floatOrb 12s ease-in-out infinite;
+            opacity: 0.7;
+        }
+
+        .menu-orb.orb-a { top: 10%; left: 12%; animation-delay: 0s; }
+        .menu-orb.orb-b { top: 65%; left: 70%; animation-delay: 2s; width: 200px; height: 200px; background: radial-gradient(circle, rgba(255, 110, 110, 0.7), rgba(255, 110, 110, 0)); }
+        .menu-orb.orb-c { top: 30%; left: 78%; animation-delay: 4s; width: 120px; height: 120px; background: radial-gradient(circle, rgba(160, 255, 180, 0.7), rgba(160, 255, 180, 0)); }
+
+        .menu-spark {
+            position: absolute;
+            width: 4px;
+            height: 120px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(77, 179, 255, 0.7), rgba(255, 255, 255, 0));
+            opacity: 0.6;
+            animation: driftSpark 6s linear infinite;
+        }
+
+        .menu-spark.spark-a { left: 18%; top: -20%; animation-delay: 0s; }
+        .menu-spark.spark-b { left: 52%; top: -30%; animation-delay: 2s; }
+        .menu-spark.spark-c { left: 78%; top: -25%; animation-delay: 4s; }
+
+        @keyframes floatOrb {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(20px, -30px) scale(1.08); }
+        }
+
+        @keyframes driftSpark {
+            0% { transform: translateY(0); opacity: 0; }
+            20% { opacity: 0.7; }
+            80% { opacity: 0.4; }
+            100% { transform: translateY(140vh); opacity: 0; }
+        }
+
         .menu-window {
             background: linear-gradient(135deg, #1a2230 0%, #0f141e 100%);
             border: 2px solid var(--accent-gold);
@@ -54,6 +109,8 @@
             align-items: center;
             text-align: center;
             min-width: 400px;
+            position: relative;
+            z-index: 1;
         }
 
         h1 {
@@ -103,7 +160,7 @@
         }
 
         button {
-            background: linear-gradient(135deg, #1f2a40 0%, #141a28 100%);
+            background: linear-gradient(135deg, rgba(77, 179, 255, 0.25) 0%, rgba(197, 160, 89, 0.25) 50%, rgba(31, 42, 64, 0.9) 100%);
             color: var(--accent-gold);
             border: 1px solid var(--border-color);
             padding: 12px 30px;
@@ -114,12 +171,27 @@
             box-shadow: 0 4px 6px rgba(0,0,0,0.3);
             text-transform: uppercase;
             width: 100%;
+            position: relative;
+            overflow: hidden;
         }
 
         button:hover {
             border-color: var(--accent-gold);
-            box-shadow: 0 0 15px rgba(197, 160, 89, 0.3);
+            box-shadow: 0 0 18px rgba(77, 179, 255, 0.4), 0 0 30px rgba(197, 160, 89, 0.3);
             transform: translateY(-2px);
+        }
+
+        button::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.25), transparent);
+            transform: translateX(-120%);
+            transition: transform 0.5s ease;
+        }
+
+        button:hover::after {
+            transform: translateX(120%);
         }
         
         .lang-group {
@@ -368,6 +440,14 @@
 
     <!-- MAIN MENU -->
     <div id="main-menu">
+        <div class="menu-backdrop">
+            <div class="menu-orb orb-a"></div>
+            <div class="menu-orb orb-b"></div>
+            <div class="menu-orb orb-c"></div>
+            <div class="menu-spark spark-a"></div>
+            <div class="menu-spark spark-b"></div>
+            <div class="menu-spark spark-c"></div>
+        </div>
         <div class="menu-window">
             <h1 id="title-txt">PATHFINDER'S MIRROR</h1>
             
@@ -613,7 +693,6 @@
 
     function toggleHint() {
         showHintOverlay = !showHintOverlay;
-        if (!beamActive) beamActive = true; 
         if(showHintOverlay) {
              score = Math.max(0, score - 200);
              updateHUD();
@@ -997,6 +1076,23 @@
     }
 
     function getBeamOrigin() {
+        const startIcon = document.querySelector('.start-icon');
+        const boardEl = document.getElementById('board-container');
+        if (startIcon && boardEl) {
+            const iconRect = startIcon.getBoundingClientRect();
+            const boardRect = boardEl.getBoundingClientRect();
+            const centerX = iconRect.left + iconRect.width / 2;
+            const centerY = iconRect.top + iconRect.height / 2;
+            const offset = iconRect.height / 2;
+            const rad = (startRotation * Math.PI) / 180;
+            const dx = Math.cos(rad - Math.PI / 2) * offset;
+            const dy = Math.sin(rad - Math.PI / 2) * offset;
+            return {
+                x: centerX + dx - boardRect.left,
+                y: centerY + dy - boardRect.top
+            };
+        }
+
         const baseX = startPos.x * (CELL_SIZE + GAP) + CELL_SIZE / 2;
         const topY = startPos.y * (CELL_SIZE + GAP) + CELL_SIZE * 0.15;
         return { x: baseX, y: topY };
