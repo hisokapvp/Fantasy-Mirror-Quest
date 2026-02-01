@@ -7,14 +7,17 @@
     <title>Mirror Protocol: Pathfinder Edition</title>
     <style>
         :root {
-            --bg-color: #0b0f19;
-            --panel-bg: rgba(20, 26, 40, 0.95);
-            --border-color: #4a5d7e;
-            --accent-gold: #c5a059;
-            --accent-blue: #4db3ff;
-            --beam-color: #ff3366;
-            --beam-win: #00ffaa;
-            --text-main: #e0e6ed;
+            --bg-color: #120e0a;
+            --panel-bg: rgba(30, 22, 16, 0.95);
+            --border-color: #5a3e2a;
+            --accent-gold: #d18b47;
+            --accent-blue: #7bd0b2;
+            --beam-color: #ff6b3a;
+            --beam-win: #68ffb4;
+            --text-main: #f2e6d6;
+            --rust-red: #8b3a2a;
+            --ash: #2a1d16;
+            --metal: #3b2a21;
         }
 
         body {
@@ -28,14 +31,31 @@
             height: 100vh;
             margin: 0;
             overflow: hidden;
-            background-image: radial-gradient(circle at center, #1a253a 0%, #05070a 100%);
+            background-image:
+                radial-gradient(circle at 20% 20%, rgba(255, 120, 60, 0.12), transparent 45%),
+                radial-gradient(circle at 80% 60%, rgba(120, 255, 200, 0.08), transparent 50%),
+                linear-gradient(120deg, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0) 40%),
+                repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.015) 0px, rgba(255, 255, 255, 0.015) 2px, transparent 2px, transparent 6px),
+                radial-gradient(circle at center, #2b1a12 0%, #080604 70%);
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background-image: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.03) 0px, rgba(255, 255, 255, 0.03) 1px, transparent 1px, transparent 3px);
+            opacity: 0.2;
+            mix-blend-mode: soft-light;
+            animation: screenFlicker 6s infinite;
+            z-index: 50;
         }
 
         /* --- UI OVERLAYS --- */
         #main-menu, #rank-screen {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(5, 7, 10, 0.9);
+            background: rgba(7, 6, 4, 0.92);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -45,10 +65,11 @@
         }
 
         #main-menu {
-            background: radial-gradient(circle at top, rgba(70, 120, 210, 0.35), transparent 55%),
-                radial-gradient(circle at 20% 80%, rgba(255, 140, 60, 0.25), transparent 50%),
-                radial-gradient(circle at 80% 20%, rgba(140, 70, 255, 0.2), transparent 45%),
-                rgba(5, 7, 10, 0.9);
+            background:
+                radial-gradient(circle at top, rgba(255, 130, 70, 0.2), transparent 55%),
+                radial-gradient(circle at 20% 80%, rgba(120, 70, 40, 0.25), transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(90, 130, 120, 0.18), transparent 45%),
+                rgba(8, 6, 4, 0.92);
             overflow: hidden;
         }
 
@@ -61,26 +82,26 @@
 
         .menu-orb {
             position: absolute;
-            width: 140px;
-            height: 140px;
+            width: 120px;
+            height: 120px;
             border-radius: 50%;
-            background: radial-gradient(circle, rgba(77, 179, 255, 0.8), rgba(77, 179, 255, 0));
-            filter: blur(2px);
-            animation: floatOrb 12s ease-in-out infinite;
-            opacity: 0.7;
+            background: radial-gradient(circle, rgba(255, 140, 80, 0.6), rgba(255, 140, 80, 0));
+            filter: blur(1px);
+            animation: floatOrb 14s ease-in-out infinite;
+            opacity: 0.5;
         }
 
         .menu-orb.orb-a { top: 10%; left: 12%; animation-delay: 0s; }
-        .menu-orb.orb-b { top: 65%; left: 70%; animation-delay: 2s; width: 200px; height: 200px; background: radial-gradient(circle, rgba(255, 110, 110, 0.7), rgba(255, 110, 110, 0)); }
-        .menu-orb.orb-c { top: 30%; left: 78%; animation-delay: 4s; width: 120px; height: 120px; background: radial-gradient(circle, rgba(160, 255, 180, 0.7), rgba(160, 255, 180, 0)); }
+        .menu-orb.orb-b { top: 62%; left: 70%; animation-delay: 2s; width: 180px; height: 180px; background: radial-gradient(circle, rgba(255, 80, 60, 0.6), rgba(255, 80, 60, 0)); }
+        .menu-orb.orb-c { top: 30%; left: 78%; animation-delay: 4s; width: 110px; height: 110px; background: radial-gradient(circle, rgba(120, 200, 160, 0.6), rgba(120, 200, 160, 0)); }
 
         .menu-spark {
             position: absolute;
             width: 4px;
             height: 120px;
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(77, 179, 255, 0.7), rgba(255, 255, 255, 0));
-            opacity: 0.6;
-            animation: driftSpark 6s linear infinite;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(255, 170, 100, 0.7), rgba(255, 255, 255, 0));
+            opacity: 0.4;
+            animation: driftSpark 7s linear infinite;
         }
 
         .menu-spark.spark-a { left: 18%; top: -20%; animation-delay: 0s; }
@@ -100,34 +121,43 @@
         }
 
         .menu-window {
-            background: linear-gradient(135deg, #1a2230 0%, #0f141e 100%);
+            background: linear-gradient(145deg, #2b2016 0%, #14100c 100%);
             border: 2px solid var(--accent-gold);
-            padding: 40px 60px;
-            border-radius: 8px;
-            box-shadow: 0 0 30px rgba(0,0,0,0.8), inset 0 0 20px rgba(197, 160, 89, 0.1);
+            padding: 36px 54px;
+            border-radius: 10px;
+            box-shadow: 0 0 40px rgba(0,0,0,0.85), inset 0 0 20px rgba(209, 139, 71, 0.2);
             display: flex;
             flex-direction: column;
             align-items: center;
             text-align: center;
-            min-width: 400px;
+            min-width: 440px;
             position: relative;
             z-index: 1;
         }
 
+        .menu-window::after {
+            content: '';
+            position: absolute;
+            inset: 8px;
+            border: 1px dashed rgba(255, 255, 255, 0.06);
+            pointer-events: none;
+        }
+
         h1 {
-            font-size: 2.5em;
+            font-size: 2.4em;
             color: var(--accent-gold);
-            text-shadow: 0 0 15px rgba(197, 160, 89, 0.5);
-            margin-bottom: 20px;
-            letter-spacing: 2px;
+            text-shadow: 0 0 18px rgba(255, 140, 80, 0.5);
+            margin-bottom: 18px;
+            letter-spacing: 3px;
             border-bottom: 1px solid var(--border-color);
             padding-bottom: 15px;
             width: 100%;
+            text-transform: uppercase;
         }
 
         .rank-info-box {
             width: 100%;
-            background: rgba(0, 0, 0, 0.3);
+            background: rgba(0, 0, 0, 0.4);
             border: 1px solid var(--border-color);
             padding: 15px;
             margin-bottom: 20px;
@@ -161,24 +191,31 @@
         }
 
         button {
-            background: linear-gradient(135deg, rgba(77, 179, 255, 0.25) 0%, rgba(197, 160, 89, 0.25) 50%, rgba(31, 42, 64, 0.9) 100%);
+            background: linear-gradient(135deg, rgba(255, 140, 80, 0.2) 0%, rgba(209, 139, 71, 0.35) 50%, rgba(40, 28, 20, 0.9) 100%);
             color: var(--accent-gold);
             border: 1px solid var(--border-color);
             padding: 12px 30px;
             font-family: inherit;
-            font-size: 1.1em;
+            font-size: 1.05em;
             cursor: pointer;
             transition: 0.3s;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.4);
             text-transform: uppercase;
             width: 100%;
             position: relative;
             overflow: hidden;
+            letter-spacing: 1px;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            box-shadow: none;
         }
 
         button:hover {
             border-color: var(--accent-gold);
-            box-shadow: 0 0 18px rgba(77, 179, 255, 0.4), 0 0 30px rgba(197, 160, 89, 0.3);
+            box-shadow: 0 0 18px rgba(255, 140, 80, 0.4), 0 0 30px rgba(120, 200, 160, 0.3);
             transform: translateY(-2px);
         }
 
@@ -186,7 +223,7 @@
             content: '';
             position: absolute;
             inset: 0;
-            background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.25), transparent);
+            background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.15), transparent);
             transform: translateX(-120%);
             transition: transform 0.5s ease;
         }
@@ -211,7 +248,56 @@
             font-size: 0.9em;
             opacity: 0.6;
         }
-        .lang-btn.active { opacity: 1; border-color: var(--accent-blue); background: #1f3a50; }
+        .lang-btn.active { opacity: 1; border-color: var(--accent-blue); background: #23392f; }
+
+        .menu-settings {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+
+        .menu-setting {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            background: rgba(0, 0, 0, 0.25);
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+        }
+
+        .menu-setting label {
+            font-size: 0.95em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #f1d9b8;
+        }
+
+        .menu-setting output {
+            min-width: 40px;
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+            color: var(--accent-blue);
+        }
+
+        select,
+        input[type="range"] {
+            background: transparent;
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-family: inherit;
+        }
+
+        input[type="range"] {
+            flex: 1;
+            accent-color: var(--accent-gold);
+            border: none;
+        }
 
         #game-ui {
             display: none;
@@ -225,10 +311,10 @@
             margin-bottom: 15px;
             font-size: 1.2em;
             background: var(--panel-bg);
-            padding: 10px 30px;
+            padding: 10px 24px;
             border: 1px solid var(--border-color);
-            border-radius: 4px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            border-radius: 6px;
+            box-shadow: 0 5px 18px rgba(0,0,0,0.6);
         }
         
         .hud-item span { color: var(--accent-blue); font-weight: bold; }
@@ -246,8 +332,9 @@
         #board-container {
             position: relative;
             box-shadow: 0 0 50px rgba(0,0,0,0.8);
-            border: 5px solid #2a3b55;
-            border-radius: 8px;
+            border: 5px solid #3a2a20;
+            border-radius: 10px;
+            background: #140e09;
         }
 
         #game-board {
@@ -257,7 +344,7 @@
         }
 
         .cell {
-            background: #1b2433;
+            background: #201610;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -276,9 +363,9 @@
 
         .mirror {
             width: 70%; height: 70%;
-            background: linear-gradient(135deg, rgba(18, 25, 38, 0.95) 0%, rgba(65, 90, 125, 0.95) 45%, rgba(150, 210, 255, 0.8) 55%, rgba(34, 52, 74, 0.95) 100%);
-            border: 1px solid #8aa6c2;
-            box-shadow: 0 0 6px rgba(0,0,0,0.6), inset 0 0 12px rgba(120, 190, 255, 0.2);
+            background: linear-gradient(135deg, rgba(50, 40, 32, 0.95) 0%, rgba(110, 80, 60, 0.95) 45%, rgba(220, 200, 170, 0.8) 55%, rgba(60, 44, 36, 0.95) 100%);
+            border: 1px solid #c8a37a;
+            box-shadow: 0 0 6px rgba(0,0,0,0.6), inset 0 0 12px rgba(220, 190, 150, 0.2);
             border-radius: 4px;
             cursor: pointer;
             transition: transform 0.2s ease-out;
@@ -292,8 +379,8 @@
             position: absolute;
             width: 140%;
             height: 6px;
-            background: linear-gradient(90deg, rgba(0, 255, 255, 0), rgba(0, 220, 255, 0.9), rgba(0, 255, 255, 0));
-            box-shadow: 0 0 10px rgba(0, 210, 255, 0.9);
+            background: linear-gradient(90deg, rgba(0, 255, 255, 0), rgba(255, 200, 120, 0.9), rgba(0, 255, 255, 0));
+            box-shadow: 0 0 10px rgba(255, 200, 120, 0.9);
             top: 50%; left: 50%;
             transform: translate(-50%, -50%);
             border-radius: 6px;
@@ -308,8 +395,8 @@
         }
         
         .mirror.reflecting {
-            box-shadow: 0 0 15px rgba(0, 210, 255, 0.8), inset 0 0 15px rgba(0, 210, 255, 0.3);
-            border-color: #b7e3ff;
+            box-shadow: 0 0 15px rgba(255, 200, 120, 0.8), inset 0 0 15px rgba(255, 200, 120, 0.3);
+            border-color: #ffd7a8;
         }
         
         .mirror[data-angle="0"] { transform: rotate(-45deg); } 
@@ -319,8 +406,8 @@
 
         .wall {
             width: 80%; height: 80%;
-            background: #2a2a35;
-            border: 2px solid #3a3a45;
+            background: #30251d;
+            border: 2px solid #5a4332;
             border-radius: 4px;
             box-shadow: inset 0 0 10px #000;
         }
@@ -336,7 +423,7 @@
         
         .start-icon { 
             font-size: 2em; 
-            filter: drop-shadow(0 0 5px #0f0); 
+            filter: drop-shadow(0 0 6px #ffb24d); 
             z-index: 3; 
             cursor: pointer; 
             transition: transform 0.25s ease-out;
@@ -394,14 +481,14 @@
         .arrow-btn {
             position: absolute;
             width: 20px; height: 20px;
-            background: rgba(0, 255, 0, 0.3);
+            background: rgba(255, 180, 90, 0.3);
             border-radius: 50%;
             cursor: pointer;
             pointer-events: auto;
             display: flex; justify-content: center; align-items: center;
             color: #fff; font-size: 10px; font-weight: bold;
         }
-        .arrow-btn:hover { background: #0f0; box-shadow: 0 0 10px #0f0; }
+        .arrow-btn:hover { background: #ffb24d; box-shadow: 0 0 10px #ffb24d; }
         
         .arr-up { top: -10px; left: 50%; transform: translateX(-50%); }
         .arr-down { bottom: -10px; left: 50%; transform: translateX(-50%); }
@@ -409,8 +496,8 @@
         .arr-right { right: -10px; top: 50%; transform: translateY(-50%); }
 
         /* End & Chest */
-        .end { font-size: 1.5em; filter: drop-shadow(0 0 5px #f00); z-index: 2; }
-        .end.lit { filter: drop-shadow(0 0 15px #0f0); transform: scale(1.2); transition: 0.5s; }
+        .end { font-size: 1.5em; filter: drop-shadow(0 0 6px #ff5330); z-index: 2; }
+        .end.lit { filter: drop-shadow(0 0 16px #68ffb4); transform: scale(1.2); transition: 0.5s; }
         
         .chest {
             font-size: 1.5em; 
@@ -425,16 +512,15 @@
 
         .monster {
             position: absolute;
-            font-size: 1.5em;
+            font-size: 1.6em;
             pointer-events: none;
             transition: top 0.5s linear, left 0.5s linear, opacity 0.3s;
             z-index: 3;
-            filter: drop-shadow(0 0 5px #a0f);
+            filter: drop-shadow(0 0 6px rgba(255, 90, 90, 0.7));
+            animation: monsterBob 2.4s ease-in-out infinite;
         }
         .monster.dead {
-            opacity: 0;
-            transform: scale(1.5);
-            filter: hue-rotate(90deg);
+            animation: zombieFall 0.9s forwards ease-in;
         }
         .float-score {
             position: absolute;
@@ -452,6 +538,24 @@
         .rank-title { font-size: 2.5em; color: var(--beam-win); margin-bottom: 5px; text-shadow: 0 0 20px var(--beam-win); }
         .stats-row { display: flex; gap: 20px; font-size: 1.2em; color: #aaa; margin: 10px 0; }
         .stat-val { color: var(--accent-gold); font-weight: bold; }
+
+        @keyframes monsterBob {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
+        }
+
+        @keyframes zombieFall {
+            0% { opacity: 1; transform: scale(1) rotate(0deg); filter: drop-shadow(0 0 6px rgba(255, 90, 90, 0.7)); }
+            60% { opacity: 0.9; transform: scale(1.2) rotate(-10deg); }
+            100% { opacity: 0; transform: scale(1.6) rotate(20deg); filter: grayscale(100%); }
+        }
+
+        @keyframes screenFlicker {
+            0%, 100% { opacity: 0.18; }
+            30% { opacity: 0.26; }
+            60% { opacity: 0.12; }
+            80% { opacity: 0.2; }
+        }
 
     </style>
 </head>
@@ -478,9 +582,29 @@
             </div>
             
             <div class="btn-group">
-                <button onclick="startGame(0)" id="btn-easy">Novice</button>
-                <button onclick="startGame(1)" id="btn-norm">Scout</button>
-                <button onclick="startGame(2)" id="btn-hard">Ranger</button>
+                <button onclick="continueGame()" id="btn-continue">Continue</button>
+                <button onclick="startNewGame()" id="btn-new-game">New Game</button>
+            </div>
+
+            <div class="menu-settings">
+                <div class="menu-setting">
+                    <label for="difficulty-select" id="lbl-difficulty">Difficulty</label>
+                    <select id="difficulty-select">
+                        <option value="0" id="diff-easy">Novice</option>
+                        <option value="1" id="diff-norm" selected>Scout</option>
+                        <option value="2" id="diff-hard">Ranger</option>
+                    </select>
+                </div>
+                <div class="menu-setting">
+                    <label for="sfx-volume" id="lbl-sfx">SFX</label>
+                    <input type="range" id="sfx-volume" min="0" max="100" value="70">
+                    <output id="sfx-value">70%</output>
+                </div>
+                <div class="menu-setting">
+                    <label for="music-volume" id="lbl-music">Music</label>
+                    <input type="range" id="music-volume" min="0" max="100" value="60">
+                    <output id="music-value">60%</output>
+                </div>
             </div>
 
             <div class="lang-group">
@@ -531,6 +655,11 @@
             easy: "Novice",
             norm: "Scout",
             hard: "Ranger",
+            continue: "Continue",
+            new_game: "New Game",
+            difficulty: "Difficulty",
+            sfx: "SFX Volume",
+            music: "Music Volume",
             score: "Energy:",
             moves: "Moves:",
             mirrors: "Mirrors:",
@@ -553,6 +682,11 @@
             easy: "Новичок",
             norm: "Разведчик",
             hard: "Следопыт",
+            continue: "Продолжить",
+            new_game: "Новая игра",
+            difficulty: "Сложность",
+            sfx: "Громкость эффектов",
+            music: "Громкость музыки",
             score: "Энергия:",
             moves: "Ходы:",
             mirrors: "Зеркала:",
@@ -576,6 +710,10 @@
     const RANK_COLORS = ["#7f8c8d", "#8e44ad", "#2980b9", "#27ae60", "#d35400", "#c0392b", "#f1c40f", "#00d2ff", "#ff00ff", "#ffd700"];
 
     let curLang = 'ru';
+
+    const SAVE_KEY = 'mirror_quest_save_v1';
+    const SETTINGS_KEY = 'mirror_quest_settings_v1';
+    const LAST_DIFF_KEY = 'mirror_quest_last_difficulty';
 
     // --- CONFIG ---
     const CELL_SIZE = 50; 
@@ -625,9 +763,14 @@
         document.getElementById('btn-lang-en').textContent = TEXT[lang].lang_en;
 
         document.getElementById('title-txt').textContent = TEXT[lang].title;
-        document.getElementById('btn-easy').textContent = TEXT[lang].easy;
-        document.getElementById('btn-norm').textContent = TEXT[lang].norm;
-        document.getElementById('btn-hard').textContent = TEXT[lang].hard;
+        document.getElementById('btn-continue').textContent = TEXT[lang].continue;
+        document.getElementById('btn-new-game').textContent = TEXT[lang].new_game;
+        document.getElementById('lbl-difficulty').textContent = TEXT[lang].difficulty;
+        document.getElementById('diff-easy').textContent = TEXT[lang].easy;
+        document.getElementById('diff-norm').textContent = TEXT[lang].norm;
+        document.getElementById('diff-hard').textContent = TEXT[lang].hard;
+        document.getElementById('lbl-sfx').textContent = TEXT[lang].sfx;
+        document.getElementById('lbl-music').textContent = TEXT[lang].music;
         document.getElementById('lbl-score').textContent = TEXT[lang].score;
         document.getElementById('lbl-moves').textContent = TEXT[lang].moves;
         document.getElementById('lbl-mirrors').textContent = TEXT[lang].mirrors;
@@ -640,6 +783,7 @@
         document.getElementById('vic-moves-lbl').firstChild.textContent = TEXT[lang].vic_moves;
         
         updateMenuRankDisplay();
+        updateContinueButton();
     }
 
     function updateMenuRankDisplay() {
@@ -661,12 +805,88 @@
         document.getElementById('menu-xp-bar').style.width = percent + "%";
     }
 
+    function updateContinueButton() {
+        const btn = document.getElementById('btn-continue');
+        const hasSave = Boolean(localStorage.getItem(SAVE_KEY));
+        btn.disabled = !hasSave;
+    }
+
+    function loadSettings() {
+        const settings = localStorage.getItem(SETTINGS_KEY);
+        let sfx = 70;
+        let music = 60;
+        if (settings) {
+            try {
+                const parsed = JSON.parse(settings);
+                sfx = typeof parsed.sfx === 'number' ? parsed.sfx : sfx;
+                music = typeof parsed.music === 'number' ? parsed.music : music;
+            } catch (err) {
+                console.warn('Failed to parse settings', err);
+            }
+        }
+        const sfxSlider = document.getElementById('sfx-volume');
+        const musicSlider = document.getElementById('music-volume');
+        sfxSlider.value = sfx;
+        musicSlider.value = music;
+        updateVolumeOutputs();
+    }
+
+    function saveSettings() {
+        const sfx = Number(document.getElementById('sfx-volume').value);
+        const music = Number(document.getElementById('music-volume').value);
+        localStorage.setItem(SETTINGS_KEY, JSON.stringify({ sfx, music }));
+        updateVolumeOutputs();
+    }
+
+    function updateVolumeOutputs() {
+        const sfx = Number(document.getElementById('sfx-volume').value);
+        const music = Number(document.getElementById('music-volume').value);
+        document.getElementById('sfx-value').textContent = `${sfx}%`;
+        document.getElementById('music-value').textContent = `${music}%`;
+    }
+
+    function getSelectedDifficulty() {
+        const select = document.getElementById('difficulty-select');
+        const value = Number(select.value);
+        return Number.isFinite(value) ? value : 1;
+    }
+
+    function rememberDifficulty(value) {
+        localStorage.setItem(LAST_DIFF_KEY, String(value));
+    }
+
+    function loadDifficultySelection() {
+        const saved = localStorage.getItem(LAST_DIFF_KEY);
+        const select = document.getElementById('difficulty-select');
+        if (saved && select) {
+            select.value = saved;
+        }
+    }
+
     function showMenu() {
         document.getElementById('main-menu').style.display = 'flex';
         document.getElementById('game-ui').style.display = 'none';
         document.getElementById('rank-screen').style.display = 'none';
         updateMenuRankDisplay();
+        updateContinueButton();
         stopGameLoop();
+    }
+
+    function startNewGame() {
+        clearSavedGame();
+        const difficulty = getSelectedDifficulty();
+        rememberDifficulty(difficulty);
+        startGame(difficulty);
+        saveGameState();
+    }
+
+    function continueGame() {
+        const saved = loadSavedGame();
+        if (!saved) {
+            updateContinueButton();
+            return;
+        }
+        applySavedGame(saved);
     }
 
     function startGame(difficulty) {
@@ -716,6 +936,7 @@
              score = Math.max(0, score - 200);
              updateHUD();
         }
+        saveGameState();
     }
 
     function updateHUD() {
@@ -752,6 +973,7 @@
         let earnedXP = Math.floor(score * LEVELS[curLevelIdx].xpRewardFactor);
         totalXP += earnedXP;
         localStorage.setItem('mirror_quest_xp_v3', totalXP);
+        clearSavedGame();
         
         setTimeout(() => {
             document.getElementById('vic-score-val').textContent = Math.floor(score);
@@ -953,7 +1175,7 @@
             
             let el = document.createElement('div');
             el.className = 'monster';
-            el.textContent = '👾';
+            el.textContent = '🧟';
             el.style.left = (mx * (CELL_SIZE+GAP) + 10) + 'px';
             el.style.top = (my * (CELL_SIZE+GAP) + 10) + 'px';
             layer.appendChild(el);
@@ -1010,6 +1232,7 @@
                 m.el.style.top = (m.y * (CELL_SIZE+GAP) + 10) + 'px';
             }
         });
+        saveGameState();
     }
     
     function stopGameLoop() {
@@ -1017,13 +1240,121 @@
         if (beamAnimFrame) cancelAnimationFrame(beamAnimFrame);
     }
 
+    function saveGameState() {
+        if (document.getElementById('game-ui').style.display === 'none') return;
+        const payload = {
+            curLevelIdx,
+            boardSize,
+            grid,
+            startPos,
+            endPos,
+            score,
+            moves,
+            showHintOverlay,
+            beamActive,
+            startRotation,
+            remainingPlaceableMirrors,
+            monsters: monsters.map(m => ({
+                x: m.x,
+                y: m.y,
+                dead: m.dead,
+                route: m.route,
+                routeIndex: m.routeIndex
+            }))
+        };
+        localStorage.setItem(SAVE_KEY, JSON.stringify(payload));
+        updateContinueButton();
+    }
+
+    function clearSavedGame() {
+        localStorage.removeItem(SAVE_KEY);
+        updateContinueButton();
+    }
+
+    function loadSavedGame() {
+        const saved = localStorage.getItem(SAVE_KEY);
+        if (!saved) return null;
+        try {
+            return JSON.parse(saved);
+        } catch (err) {
+            console.warn('Failed to parse saved game', err);
+            return null;
+        }
+    }
+
+    function applySavedGame(saved) {
+        curLevelIdx = saved.curLevelIdx ?? 1;
+        boardSize = saved.boardSize ?? LEVELS[curLevelIdx].size;
+        grid = saved.grid ?? [];
+        startPos = saved.startPos ?? { x: 0, y: 0, dir: 'RIGHT' };
+        endPos = saved.endPos ?? { x: boardSize - 1, y: 0 };
+        score = saved.score ?? LEVELS[curLevelIdx].startScore;
+        moves = saved.moves ?? 0;
+        showHintOverlay = saved.showHintOverlay ?? false;
+        beamActive = saved.beamActive ?? true;
+        startRotation = saved.startRotation ?? getRotationForDir(startPos.dir);
+        remainingPlaceableMirrors = saved.remainingPlaceableMirrors ?? 0;
+        isWin = false;
+
+        document.getElementById('main-menu').style.display = 'none';
+        document.getElementById('game-ui').style.display = 'flex';
+
+        const boardEl = document.getElementById('game-board');
+        boardEl.style.gridTemplateColumns = `repeat(${boardSize}, ${CELL_SIZE}px)`;
+        boardEl.style.gridTemplateRows = `repeat(${boardSize}, ${CELL_SIZE}px)`;
+
+        const canvas = document.getElementById('beam-canvas');
+        canvas.width = boardSize * (CELL_SIZE + GAP);
+        canvas.height = boardSize * (CELL_SIZE + GAP);
+
+        updateHUD();
+        renderBoard();
+        restoreMonsters(saved.monsters || []);
+
+        stopGameLoop();
+        monsterInterval = setInterval(updateMonsters, 2000);
+        beamPulse = 0;
+        animateBeam();
+        traceBeam();
+    }
+
+    function restoreMonsters(savedMonsters) {
+        const layer = document.getElementById('monsters-layer');
+        layer.innerHTML = '';
+        monsters = savedMonsters.map(m => {
+            const el = document.createElement('div');
+            el.className = 'monster';
+            el.textContent = '🧟';
+            el.style.left = (m.x * (CELL_SIZE + GAP) + 10) + 'px';
+            el.style.top = (m.y * (CELL_SIZE + GAP) + 10) + 'px';
+            if (m.dead) {
+                el.classList.add('dead');
+            }
+            layer.appendChild(el);
+            return {
+                x: m.x,
+                y: m.y,
+                el,
+                dead: m.dead,
+                route: m.route || [],
+                routeIndex: m.routeIndex || 0
+            };
+        });
+    }
+
     function killMonster(m) {
         if (m.dead) return;
         m.dead = true;
         m.el.classList.add('dead');
+        m.el.addEventListener('animationend', () => {
+            if (m.el && m.el.parentElement) {
+                m.el.parentElement.removeChild(m.el);
+            }
+        }, { once: true });
         score += 500;
         showFloatText(m.el.style.left, m.el.style.top, "+500");
         updateHUD();
+        saveGameState();
     }
     
     function openChest(r, c) {
@@ -1042,6 +1373,7 @@
             showFloatText(left, top, "+2000", "#ffd700");
             
             updateHUD();
+            saveGameState();
         }
     }
     
@@ -1086,6 +1418,7 @@
         applyStartRotation(iconEl);
         if (!beamActive) beamActive = true;
         traceBeam();
+        saveGameState();
     }
 
     function rotateStartIcon() {
@@ -1113,6 +1446,7 @@
             updateHUD();
             let dom = document.querySelector(`.mirror[data-r="${r}"][data-c="${c}"]`);
             if (dom) dom.dataset.angle = cell.angle;
+            saveGameState();
         }
     }
     
@@ -1128,6 +1462,7 @@
         score = Math.max(0, score - LEVELS[curLevelIdx].moveCost);
         updateHUD();
         renderBoard();
+        saveGameState();
     }
 
     function renderBoard() {
@@ -1292,8 +1627,18 @@
         }
     }
     
+    document.getElementById('sfx-volume').addEventListener('input', saveSettings);
+    document.getElementById('music-volume').addEventListener('input', saveSettings);
+    document.getElementById('difficulty-select').addEventListener('change', (event) => {
+        rememberDifficulty(event.target.value);
+    });
+    window.addEventListener('beforeunload', saveGameState);
+
+    loadSettings();
+    loadDifficultySelection();
     setLang('ru');
     updateMenuRankDisplay();
+    updateContinueButton();
 
 </script>
 </body>
